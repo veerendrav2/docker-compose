@@ -7,3 +7,7 @@ echo $key
 chmod +x "$compose_script"
 chmod +x n42inc_communityedition.sh
 
+python "$compose_script"
+docker-compose -f docker-compose-master.yml up -d
+docker-compose -H :4000 -f docker-compose-slaves.yml up -d
+
