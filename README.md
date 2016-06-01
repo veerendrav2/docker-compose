@@ -1,2 +1,2 @@
-# docker-compose
-docker-compose generator for  n42 community version 
+# N42 Community Edition Installer
+With the help of Docker-Compose, it will deploy the N42CE containers in Swarm cluster.
