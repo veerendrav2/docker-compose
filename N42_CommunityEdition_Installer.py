@@ -2,7 +2,7 @@
 Author: Networks42
 Description: Installs/Removes the N42 CE containers in Swarm Cluster
 '''
-import subprocess, re, sys, os
+import subprocess, re, sys, os, traceback
 master_images="n42inc/n42ce_master:latest"
 slave_image="n42inc/n42ce_slave:latest"
 d = dict()
@@ -21,9 +21,13 @@ def install_yaml():
 def install_docker_compose():
     try:
         output = execute_cmd("docker-compose -v")
-        print output.strip(),"**Already installed docker-compose, nothing do to!..."
-    except:
+        version=output.split()[2]
+        if float(".".join(version.split(".")[:2]))<1.7:
+            print "The docker-compose version must be greater than 1.7. Please upgrade it!"
+            sys.exit()
+    except Exception:
         print "Installing Docker-Compose..."
+        print traceback.format_exc()
         try:
             execute_cmd("curl -L https://github.com/docker/compose/releases/download/1.7.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose")
             execute_cmd("chmod +x /usr/local/bin/docker-compose")
@@ -108,16 +112,36 @@ def remove_n42Container():
     except:
         print "Some went wrong!, Docker Swarm containers are running?"
 
+def updata_n42Container():
+    print "Downloading will take some time, dependening on your Internet speed"
+    print "Updataing Slave Images..."
+    try:
+        execute_cmd("docker -H :4000 pull n42inc/n42ce_slave:latest")
+        print "Updataing Master Image..."
+        execute_cmd("docker pull n42inc/n42ce_master:latest")
+        remove_n42Container()
+        install_n42Containers()
+    except Exception:
+        print "Some went wrong!"
+    
+    
+    
 if __name__ == '__main__':
     while True:
-        print "Please choose an option (1) or (2)"
-        print "1.Install N42 Containers \n2.Remove N42 Containers"
+        print "Please choose an option (1) or (2) or (3)"
+        print "1.Install N42 Containers \n2.Remove N42 Containers \n3.Updata N42 Images"
         response = raw_input("Enter> ")
         if response == "1":
             install_n42Containers()
             break
         elif response == "2":
             remove_n42Container()
+            break
+        elif response=="3":
+            print "Updating the N42 Image will relaunch the N42 Containers"
+            res = raw_input("Do you want to continue? [Y/N] ")
+            if res and res[0].upper()=="Y":
+                updata_n42Container()
             break
         else:
             print "INVALID OPTION. Try Again!\n"
